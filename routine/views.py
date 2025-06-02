@@ -41,16 +41,16 @@ def save_routine(request):
     except Exception as e:
         return Response({"detail": str(e)}, status=401)
     
-    days = range(1, 32)
+    data = request.data
     routine = None
     special_routine = None
 
-    if "title" in request.POST:
-        title = request.POST.get("title") or "기본 루틴 제목"
-        routine_type = request.POST.get("routine_type")
-        day_of_week = request.POST.get("day_of_week") if routine_type == "weekly" else None
-        day_of_month = request.POST.get("day_of_month") if routine_type == "monthly" else None
-        time = request.POST.get("routine_time")
+    if "title" in data:
+        title = data.get("title") or "기본 루틴 제목"
+        routine_type = data.get("routine_type")
+        day_of_week = data.get("day_of_week") if routine_type == "weekly" else None
+        day_of_month = data.get("day_of_month") if routine_type == "monthly" else None
+        time = data.get("routine_time")
 
         routine = LetterRoutine.objects.create(
             user=request.user,
@@ -61,9 +61,9 @@ def save_routine(request):
             time=time
         )
 
-    elif "name" in request.POST:
-        name = request.POST.get("name")
-        date = request.POST.get("date")
+    elif "name" in data:
+        name = data.get("name")
+        date = data.get("date")
 
         special_routine = SpecialDateRoutine.objects.create(
             user=request.user,
