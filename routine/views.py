@@ -6,25 +6,40 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now, localtime
 from datetime import datetime, timedelta
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+from .service import verify_access_token
+from django.contrib.auth import get_user_model #  Django에서 현재 사용하는 사용자 모델을 가져옴
+
 
 #@login_required(login_url='login')
 
+WEEKDAYS = {
+    "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
+    "Friday": 4, "Saturday": 5, "Sunday": 6
+}
 
-# 뷰 함수 안에 임시 유저 설정
-# 실제 서비스에선 쓰면 안 됨!!!!!!!!!!!!!!!!
-from django.contrib.auth import get_user_model
+
+def get_user_from_token(request):
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        raise Exception("Authorization header missing")
+    token = auth_header.split("Bearer ")[1]
+    user_id = verify_access_token(token)
+    User = get_user_model()
+    return User.objects.get(id=user_id)
+
 
 
 
 @csrf_exempt
+@api_view(['POST'])
 def save_routine(request):
     
-    
-    User = get_user_model()
-    
-    #임시 유저 할당!!
-    request.user = User.objects.first()
-    
+    try:
+        request.user = get_user_from_token(request)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=401)
     
     days = range(1, 32)
     routine = None
@@ -55,17 +70,14 @@ def save_routine(request):
             name=name,
             date=date
         )
-
-    routines = LetterRoutine.objects.filter(user=request.user)
-    specialDays = SpecialDateRoutine.objects.filter(user=request.user)
-
-    lists = {
-        "days": days,
-        "routines": routines,
-        "specialDays": specialDays,
-        "routine_id": routine.id if routine else None,
-        "special_routine_id": special_routine.id if special_routine else None
-    }
+    
+    # lists = {
+    #     "days": days,
+    #     "routines": routines,
+    #     "specialDays": specialDays,
+    #     "routine_id": routine.id if routine else None,
+    #     "special_routine_id": special_routine.id if special_routine else None
+    # }
 
     #return render(request, "routines/routine.html", lists)
 
@@ -74,25 +86,23 @@ def save_routine(request):
         "special_routine_id": special_routine.id if special_routine else None
     })
 
-WEEKDAYS = {
-    "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
-    "Friday": 4, "Saturday": 5, "Sunday": 6
-}
 
 #@login_required
+@api_view(['GET'])
 def get_routine_events(request):
     
+    try:
+        request.user = get_user_from_token(request)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=401)
+
     
+    # User = get_user_model()
     
+    # #임시 유저 할당!!
+    # request.user = User.objects.first()
     
-    
-    User = get_user_model()
-    
-    #임시 유저 할당!!
-    request.user = User.objects.first()
-    
-    
-    
+
     user = request.user
     routines = LetterRoutine.objects.filter(user=user)
     special_dates = SpecialDateRoutine.objects.filter(user=user)
@@ -137,7 +147,16 @@ def get_routine_events(request):
     return JsonResponse(events, safe=False)
 
 
+
+@api_view(['DELETE'])
 def delete_routine(request, pk):
+    
+    try:
+        request.user = get_user_from_token(request)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=401)
+
+    
     try:
         routine = get_object_or_404(LetterRoutine, pk=pk, user=request.user)
         routine.delete()
@@ -146,7 +165,15 @@ def delete_routine(request, pk):
         return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
+@api_view(['GET'])
 def get_today_routines(request):
+    
+    try:
+        request.user = get_user_from_token(request)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=401)
+    
+    
     now_dt = localtime(now()).replace(second=0, microsecond=0)
     today = now_dt.strftime("%A")
     current_day = now_dt.day
@@ -154,12 +181,9 @@ def get_today_routines(request):
     window_end = (now_dt + timedelta(minutes=1)).time()
     
     
-    User = get_user_model()
+    # User = get_user_model()
     
-    user = User.objects.first()  # 임시 사용자
-    
-    
-    
+    # user = User.objects.first()  # 임시 사용자
 
     routines = LetterRoutine.objects.filter(user=user, time__range=(window_start, window_end))
     result = []
@@ -181,6 +205,7 @@ def get_today_routines(request):
     return JsonResponse(result, safe=False)
 
 @csrf_exempt
+@api_view(['GET'])
 def test_routines_for_scheduler(request):
     routines = LetterRoutine.objects.all()[:3]  # 일부만 테스트용으로
     result = []
