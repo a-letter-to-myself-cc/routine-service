@@ -25,5 +25,7 @@ ENV DB_NAME=$DB_NAME \
     DB_PORT=$DB_PORT \
     SECRET_KEY=$SECRET_KEY
 
+# Django 서버 실행
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8003"]
 # Django 서버 실행 (마이그레이션, 슈퍼유저 생성, 서버 기동을 한 줄로 처리)
 CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py createsuperuser --noinput --username admin --email admin@example.com || true && python manage.py runserver 0.0.0.0:8003"]
