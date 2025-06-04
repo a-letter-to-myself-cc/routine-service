@@ -6,6 +6,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# entrypoint 추가
+COPY entrypoint.sh /entrypoint.sh
+RUN apt-get update && apt-get install -y netcat-openbsd
+RUN chmod +x /entrypoint.sh
+
 # 소스 코드 복사
 COPY . .
 
@@ -28,4 +33,4 @@ ENV DB_NAME=$DB_NAME \
 # Django 서버 실행
 # CMD ["python", "manage.py", "runserver", "0.0.0.0:8003"]
 # Django 서버 실행 (마이그레이션, 슈퍼유저 생성, 서버 기동을 한 줄로 처리)
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py createsuperuser --noinput --username admin --email admin@example.com || true && python manage.py runserver 0.0.0.0:8003"]
+CMD ["./entrypoint.sh"]

@@ -1,110 +1,51 @@
 version: '3.8'
 services:
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-
-  routine_service:
-    build:
-      context: ./routine-service
-    container_name: routine_service
-    command: python manage.py runserver 0.0.0.0:8003
-    ports:
-      - "8003:8003"
-    env_file:
-      - ./routine-service/.env
-    depends_on:
-      - rabbitmq
-      - db
-    restart: always
-
-  scheduler_service:
-    build:
-      context: ./scheduler-service
-    container_name: scheduler_service
-    command: python manage.py runserver 0.0.0.0:8004
-    ports:
-      - "8004:8004"
-    env_file:
-      - ./scheduler-service/.env
-    depends_on:
-      - rabbitmq
-      - routine_service
-      - db
-    restart: always
-
-  scheduler_worker:
-    build:
-      context: ./scheduler-service
-    container_name: scheduler_worker
-    command: celery -A scheduler_service worker --loglevel=info --pool=solo -Q scheduler_queue
-    env_file:
-      - ./scheduler-service/.env
-    depends_on:
-      - rabbitmq
-      - db
-    restart: always
-
-  scheduler_beat:
-    build:
-      context: ./scheduler-service
-    container_name: scheduler_beat
-    command: celery -A scheduler_service beat --loglevel=info
-    env_file:
-      - ./scheduler-service/.env
-    depends_on:
-      - rabbitmq
-      - db
-    restart: always
-
-  notification_service:
-    build:
-      context: ./notification-service
-    container_name: notification_service
-    command: python manage.py runserver 0.0.0.0:8005
-    ports:
-      - "8005:8005"
-    env_file:
-      - ./notification-service/.env
-    depends_on:
-      - rabbitmq
-      - db
-    restart: always
-
-  notification_worker:
-    build:
-      context: ./notification-service
-    container_name: notification_worker
-    command: celery -A notification_service worker --loglevel=info --pool=solo -Q notification_queue
-    env_file:
-      - ./notification-service/.env
-    depends_on:
-      - rabbitmq
-      - db
-    restart: always
-
-  db:
+  routine-service-db:
     image: postgres:14
-    container_name: db
-    environment:
-      POSTGRES_DB: routine_db
-      POSTGRES_USER: db1171
-      POSTGRES_PASSWORD: db1171
-    ports:
-      - "5432:5432"
-    volumes:
-      - routine_db_data:/var/lib/postgresql/data
+    container_name: routine-service-db
     restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    # env_file:
+    #   - .env
+    ports:
+      - 5435:5432
+    volumes:
+      - routine-service-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - schedule-internal-net
+
+  routine-service:
+    build: .
+    container_name: routine-service
+    restart: always
+    ports:
+    - 8003:8003
+    networks:
+    - schedule-internal-net
+    - auth-share-net
+    depends_on:
+    - routine-service-db
+    env_file:
+      - .env
+    # environment:
+    #   DB_NAME: routine-service_db
+    #   DB_USER: postgres
+    #   DB_PASSWORD: sksk0877
+    
 
 networks:
-  default:
-    name: routine_service_network
+  schedule-internal-net:
+    external: true
+  auth-share-net:
+    external: true
 
 volumes:
-  routine_db_data:
+  routine-service-db-data:
