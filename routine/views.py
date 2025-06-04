@@ -25,10 +25,10 @@ def get_user_from_token(request):
     if not auth_header.startswith("Bearer "):
         raise Exception("Authorization header missing")
     token = auth_header.split("Bearer ")[1]
-    user_id = verify_access_token(token)
-    User = get_user_model()
-    return User.objects.get(id=user_id)
-
+    user_info = verify_access_token(token)  # ✅ 토큰 검증 및 유저 정보 받아옴
+    if not user_info:
+        raise Exception("Invalid token")
+    return user_info  # ex: {"user_id": 1, "email": "test@test.com"}
 
 
 
@@ -37,7 +37,7 @@ def get_user_from_token(request):
 def save_routine(request):
     
     try:
-        request.user = get_user_from_token(request)
+        user_id = get_user_from_token(request)
     except Exception as e:
         return Response({"detail": str(e)}, status=401)
     
@@ -53,7 +53,7 @@ def save_routine(request):
         time = data.get("routine_time")
 
         routine = LetterRoutine.objects.create(
-            user=request.user,
+            user_id=user_id,
             title=title,
             routine_type=routine_type,
             day_of_week=day_of_week,
@@ -66,7 +66,7 @@ def save_routine(request):
         date = data.get("date")
 
         special_routine = SpecialDateRoutine.objects.create(
-            user=request.user,
+            user_id=user_id,
             name=name,
             date=date
         )
@@ -92,7 +92,7 @@ def save_routine(request):
 def get_routine_events(request):
     
     try:
-        request.user = get_user_from_token(request)
+        user_id = get_user_from_token(request)
     except Exception as e:
         return Response({"detail": str(e)}, status=401)
 
@@ -103,9 +103,8 @@ def get_routine_events(request):
     # request.user = User.objects.first()
     
 
-    user = request.user
-    routines = LetterRoutine.objects.filter(user=user)
-    special_dates = SpecialDateRoutine.objects.filter(user=user)
+    routines = LetterRoutine.objects.filter(user_id=user_id)
+    special_dates = SpecialDateRoutine.objects.filter(user_id=user_id)
 
     
     today = datetime.today().date()
@@ -152,13 +151,13 @@ def get_routine_events(request):
 def delete_routine(request, pk):
     
     try:
-        request.user = get_user_from_token(request)
+        user_id = get_user_from_token(request)
     except Exception as e:
         return Response({"detail": str(e)}, status=401)
 
     
     try:
-        routine = get_object_or_404(LetterRoutine, pk=pk, user=request.user)
+        routine = get_object_or_404(LetterRoutine, pk=pk, user_id=user_id)
         routine.delete()
         return JsonResponse({'status': 'success'})
     except Exception as e:
@@ -169,7 +168,7 @@ def delete_routine(request, pk):
 def get_today_routines(request):
     
     try:
-        request.user = get_user_from_token(request)
+        user_id = get_user_from_token(request)
     except Exception as e:
         return Response({"detail": str(e)}, status=401)
     
@@ -185,20 +184,26 @@ def get_today_routines(request):
     
     # user = User.objects.first()  # 임시 사용자
 
-    routines = LetterRoutine.objects.filter(user=user, time__range=(window_start, window_end))
+    # routines = LetterRoutine.objects.filter(user_info["user_id"], time__range=(window_start, window_end))
+    routines = LetterRoutine.objects.filter(
+    user_id=user_id,
+    time__range=(window_start, window_end)
+)
+
+    
     result = []
 
     for r in routines:
         if r.routine_type == 'weekly' and r.day_of_week == today:
             result.append({
-                "user_email": r.user.email,
-                "username": r.user.username,
+                "user_email": r.user_email,
+                "username": r.username,
                 "time": str(r.time)
             })
         elif r.routine_type == 'monthly' and r.day_of_month == current_day:
             result.append({
-                "user_email": r.user.email,
-                "username": r.user.username,
+                "user_email": r.user_email,
+                "username": r.username,
                 "time": str(r.time)
             })
 
