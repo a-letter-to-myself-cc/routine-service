@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
-
+from routine.views import health_check
 
 
 app_name = 'routines'
@@ -11,4 +11,5 @@ urlpatterns = [
     path("", TemplateView.as_view(template_name="commons/index.html"), name="home"),
     path("routine/", include("routine.urls")),  
     path("api/routines/", include("routine.urls")),
+    path("health/", health_check),
 ]
