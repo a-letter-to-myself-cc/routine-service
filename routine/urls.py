@@ -11,4 +11,5 @@ urlpatterns = [
     #path("api/routines/today/", views.get_today_routines, name="get_today_routines"),
     #path("api/routines/today/", views.test_routines_for_scheduler), #테스트용!!!!
     path('today/', views.test_routines_for_scheduler),
+    path('health/', views.health_check),
 ]

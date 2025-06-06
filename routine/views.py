@@ -223,3 +223,8 @@ def test_routines_for_scheduler(request):
         })
 
     return JsonResponse(result, safe=False)
+
+
+@api_view(['GET'])
+def health_check(request):
+    return JsonResponse({"status": "ok"})
