@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from .models import LetterRoutine, SpecialDateRoutine
 from django.utils.timezone import now
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.timezone import now, localtime
 from datetime import datetime, timedelta
@@ -225,6 +226,6 @@ def test_routines_for_scheduler(request):
     return JsonResponse(result, safe=False)
 
 
-@api_view(['GET'])
+@require_GET
 def health_check(request):
     return JsonResponse({"status": "ok"})
