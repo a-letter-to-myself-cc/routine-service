@@ -2,7 +2,7 @@
 import requests
 
 #컨테이너버전
-AUTH_SERVICE_URL = "http://auth-service:8001/auth"
+AUTH_SERVICE_URL = "http://auth-service:8001/api/auth"
 
 #로컬버전
 #AUTH_SERVICE_URL = "http://localhost:8001/auth"
