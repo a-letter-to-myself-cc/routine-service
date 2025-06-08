@@ -26,15 +26,14 @@ def get_user_from_token(request):
     if not auth_header.startswith("Bearer "):
         raise Exception("Authorization header missing")
     token = auth_header.split("Bearer ")[1]
-    user_info = verify_access_token(token)  # ✅ 토큰 검증 및 유저 정보 받아옴
-    if not user_info:
-        raise Exception("Invalid token")
-    return user_info  # ex: {"user_id": 1, "email": "test@test.com"}
-
+    user_info = verify_access_token(token)  # ✅ 이게 {"user_id": 1, ...} 리턴함
+    if not user_info or "user_id" not in user_info:
+        raise Exception("Invalid token or user_id missing")
+    return user_info["user_id"]  # ✅ 진짜 숫자 ID만 리턴해야 함
 
 
 @csrf_exempt
-@api_view(['POST'])
+@api_view(['GET','POST'])
 def save_routine(request):
     
     try:
