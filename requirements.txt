@@ -20,4 +20,5 @@ vine==5.1.0
 wcwidth==0.2.13
 celery==5.4.0
 djangorestframework
+django-cors-headers
 requests

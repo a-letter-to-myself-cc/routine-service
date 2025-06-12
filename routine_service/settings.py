@@ -19,9 +19,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'routine',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # 꼭 위쪽에 위치해야 함!
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -29,6 +31,16 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',      # ✅ 추가
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost",               # 로컬 개발
+    "http://web-client-service",     # docker/k8s 내부 네트워크 이름
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://[0-9\.]+(:[0-9]+)?$",  # IP 주소 기반 origin 허용
+]
 
 ROOT_URLCONF = 'routine_service.urls'
 
