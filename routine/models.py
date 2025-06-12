@@ -15,7 +15,7 @@ class LetterRoutine(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.routine_type} ({self.day_of_week} {self.time})"
+        return f"[User ID: {self.user_id}] - {self.routine_type} ({self.day_of_week} {self.time})"
 
 
 class SpecialDateRoutine(models.Model):
