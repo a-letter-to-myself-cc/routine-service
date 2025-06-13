@@ -86,6 +86,43 @@ def save_routine(request):
     })
 
 
+
+@api_view(['GET'])
+def list_routines(request):
+    try:
+        user_id = get_user_from_token(request)
+    except Exception as e:
+        return Response({"detail": str(e)}, status=401)
+
+    routines = LetterRoutine.objects.filter(user_id=user_id)
+    special_dates = SpecialDateRoutine.objects.filter(user_id=user_id)
+
+    routine_data = []
+    for r in routines:
+        routine_data.append({
+            "id": r.id,
+            "title": r.title,
+            "routine_type": r.routine_type,
+            "day_of_week": r.day_of_week,
+            "day_of_month": r.day_of_month,
+            "routine_time": str(r.time),
+            "type": "routine"
+        })
+
+    special_data = []
+    for s in special_dates:
+        special_data.append({
+            "id": s.id,
+            "name": s.name,
+            "date": s.date.strftime("%Y-%m-%d"),
+            "type": "special"
+        })
+
+    return Response(routine_data + special_data)
+
+
+
+
 #루틴 목록을 캘린더 이벤트 형식으로 반환
 @api_view(['GET'])
 def get_routine_events(request):

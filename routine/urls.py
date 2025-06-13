@@ -8,8 +8,10 @@ app_name = 'routines' # 앱 네임스페이스 설정
 urlpatterns = [
     path('', views.save_routine, name='save_routine'), # /api/routines/
     
-    # GET 루틴 목록
+    # GET 루틴 캘린더 목록
     path('events/', views.get_routine_events, name='get_routine_events'), # /api/routines/events/
+    
+    path('list/', views.list_routines, name='list_routine'),
     
     # DELETE 루틴 삭제
     path('delete/<int:pk>/', views.delete_routine, name='delete_routine'), # /api/routines/delete/3/
