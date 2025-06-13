@@ -1,7 +1,7 @@
 # service.py
 import requests
 
-#컨테이너버전
+#쿠버네티스버전
 AUTH_SERVICE_URL = "http://auth-service:8001/api/auth"
 
 #로컬버전
@@ -9,9 +9,13 @@ AUTH_SERVICE_URL = "http://auth-service:8001/api/auth"
 
 def verify_access_token(token):
     try:
+        print("🛠 routine-service가 auth-service에 보낼 토큰:", token)  # 디버깅 로그
+
         response = requests.post(f"{AUTH_SERVICE_URL}/internal/verify/", json={"token": token})
         if response.status_code == 200:
-            return response.json()['user_id']
+            user_id = response.json()['user_id']
+            print("✅ auth-service로부터 받은 user_id:", user_id)  # 디버깅 로그
+            return user_id
         else:
             try:
                 return_detail = response.json().get('detail', response.text)

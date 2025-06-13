@@ -42,24 +42,6 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^http://[0-9\.]+(:[0-9]+)?$",  # IP 주소 기반 origin 허용
 ]
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'routine_service.authentication.CookieJWTAuthentication',
-        'rest_framework.authentication.BasicAuthentication',    
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ]
-}
-
-SIMPLE_JWT = {
-    'AUTH_COOKIE': 'access',              # access 쿠키 이름
-    'AUTH_COOKIE_SECURE': False,          # HTTPS 아니어도 허용 (로컬)
-    'AUTH_COOKIE_HTTP_ONLY': True,
-    'AUTH_COOKIE_PATH': '/',
-    'AUTH_COOKIE_SAMESITE': 'Lax',
-}
 ROOT_URLCONF = 'routine_service.urls'
 
 TEMPLATES = [

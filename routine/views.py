@@ -3,10 +3,10 @@ from django.http import JsonResponse
 from django.utils.timezone import now, localtime
 from django.views.decorators.http import require_GET
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
 from .models import LetterRoutine, SpecialDateRoutine
 from datetime import datetime, timedelta
+from .service import verify_access_token  # auth-service에 요청 보내는 함수
 
 
 # 요일 문자열을 숫자로 매핑
@@ -18,19 +18,18 @@ WEEKDAYS = {
 
 # Authorization 헤더에서 사용자 ID 추출하는 유틸 함수
 def get_user_from_token(request):
-    token = request.COOKIES.get("access")
-    if not token:
-        raise Exception("Access token missing in cookies")
-    
-    try:
-        user_id = verify_token(token)  # ✅ user_id 직접 반환하는 구조
-        return user_id
-    except Exception as e:
-        raise Exception("Invalid token: " + str(e))
+    #Authorization 헤더에서 직접 토큰 파싱
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise Exception("Access token missing in Authorization header")
+    token = auth_header.split(" ")[1]
+
+    token = auth_header.split(" ")[1]
+    #verify_access_token(token) 호출
+    return verify_access_token(token)
 
 # 루틴 등록 API (POST: 루틴 저장)
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
 def save_routine(request):
 
     try:
@@ -89,7 +88,6 @@ def save_routine(request):
 
 #루틴 목록을 캘린더 이벤트 형식으로 반환
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def get_routine_events(request):
     
     try:
